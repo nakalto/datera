@@ -1,0 +1,20 @@
+#python 
+__pychache__/
+*.py[cod]
+*.sqlite3
+env/
+venv/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+#Django staff
+media/
+staticfiles/
+local_settings.py 
+
+#IDE
+.vscode 
+.idea/
+*.swp

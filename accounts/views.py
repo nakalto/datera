@@ -1,11 +1,23 @@
 from django.shortcuts import render
 from django.contrib.auth import login,logout
 from django.middleware.csrf import get_token
+from django.core.mail import send_mail
+from django .conf import settings
+from django.shortcuts import render
+
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status,permissions
-from .serializers import RegisterSerializer, LoginSerializer
-from .models import User
+import pyotp
+
+from .serializers import(
+    RegisterSerializer,LoginSerializer,EmailVerifyConfirmSerializer,
+    EmailVerifySendSerializer,OtpSendSerializer,OtpVerifySerializer,
+    TwoFASetupStartSerializer,TwoFAVerifySerializer,TwoFADisableSerializer
+)
+
+from .models import User,Otpcode, EmailVerifyToken
 
 
 
@@ -21,10 +33,21 @@ class RegisterView(APIView):
 
 
         #save user  
-        user = serialiarizers.save()    
+        user = serialiarizers.save() 
 
+        #create email verification token 
+        evt = EmailVerifyToken.new_for(user)
+        verify_link = f"{request.build_absolute_uri('/auth/verify-email')}?token={evt.token}"   
+
+        send_mail(
+            subject="verify your Datera Email",
+            message=f"click link to verify: {verify_link}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
         #return a success message with the email 
-        return Response({"message":"registration sucessful. please verify your email to continue.","email":user.email })
+        return Response({"message":"registration sucessful. please check your email ","email":user.email })
     
 
 

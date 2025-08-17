@@ -4,6 +4,7 @@ __pychache__/
 *.sqlite3
 env/
 venv/
+.env
 *.log
 *.pot
 *.pyc

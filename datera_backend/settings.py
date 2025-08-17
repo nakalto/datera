@@ -97,6 +97,15 @@ REST_FRAMEWORK = {
 
 }
 
+EMAIL_BACKEND = "django.core.mail.backend.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT","587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL","no-reply@datera.com")
+
+
 # Static and media settings for local dev; production will move to object storage
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR/"frontend"/"static"]

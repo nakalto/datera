@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Login • Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Welcome back</h1>
+  <p class="sub">Use your email and password to continue.</p>
+
+  <form id="loginForm" method="post" action="/api/auth/login/">
+    {% csrf_token %}
+    <label>Email</label>
+    <input name="email" type="email" required autocomplete="email">
+
+    <label>Password</label>
+    <div class="row">
+      <input id="loginPassword" name="password" type="password" required autocomplete="current-password">
+      <button type="button" class="link" onclick="togglePassword('loginPassword', this)">Show</button>
+    </div>
+
+    <button class="btn w-100" type="submit">Login</button>
+  </form>
+
+  <p class="muted center">No account? <a href="/auth/register/">Create one</a></p>
+  <p class="muted center" style="margin-top:8px">Didn’t get verify email? <a href="/auth/verify-email/">Open verify page</a></p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+  const payload = { email: data.get("email"), password: data.get("password") };
+
+  const res = await fetch(form.action, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json().catch(() => ({}));
+
+  if (res.ok && json.twofa) {
+    toast("2FA required. Enter your code.");
+    window.location.href = "/auth/2fa/";
+    return;
+  }
+
+  if (res.ok) {
+    toast("Login successful");
+    window.location.href = "/dashboard/"; /* change target page if needed */
+  } else {
+    const msg = typeof json === "object" ? (json.detail || Object.values(json).join(" ")) : "Login failed";
+    toast(msg || "Login failed", "error");
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}register . Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Create your account</h1>
+  <p class="sub">Welcome to Datera</p>
+  
+  <form id="registerForm" action="/api/auth/register/" method="post">
+    {% csrf_token %}
+    <label for="email">Email</label>
+    <input name="email" type="email" required autocomplete="email">
+
+    <label for="password">password</label>
+    <div class="row">
+      <input id="regPassword" name="password" type="password" minlength="10" required autocomplete="new-password">
+      <button type="button" class="link" onclick="togglePassword('regPassword',this)">show</button>  
+    </div>
+
+    <!-- added confirm_password to satisfy backend validation -->
+    <label for="confirm_password">confirm password</label>
+    <div class="row">
+      <input id="regPassword2" name="confirm_password" type="password" minlength="10" required autocomplete="new-password">
+      <button type="button" class="link" onclick="togglePassword('regPassword2',this)">show</button>  
+    </div>
+
+    <label for="display_name">display_name</label>
+    <input name="display_name" type="text" maxlength="50">
+
+    <label for="phone">phone</label>
+    <input name="phone" type="text" placeholder="+255...">
+
+    <div class="grid-2">
+      <div>
+        <label for="date of birth">date of birth</label>
+        <input name="dob" type="date">
+      </div>
+
+      <div>
+        <label for="gender">gender</label>
+        <input name="gender" type="text" placeholder="Male/Female/Other">
+      </div>
+    </div>
+
+    <label for="seeking">seeking</label>
+    <input name="seeking" type="text" placeholder="Men/women/Everyone">
+
+    <button class="btn w-100" type="submit"> create account </button>
+  </form>
+
+  <p class="muted center"> Already have an account? <a href="/auth/login/">Login</a></p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+
+  const res = await fetch(form.action, {
+    method: "POST",  // fixed (was 'methed')
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+    body: JSON.stringify(data)
+  });
+
+  const json = await res.json().catch(() => ({}));
+
+  if (res.ok) {
+    toast("Registration successful. check your email to verify.");
+    window.location.href = "/auth/verify-email/";  // fixed (was 'Window')
+  } else {
+    const msg = typeof json === "object"
+      ? Object.entries(json).map(([k, v]) => Array.isArray(v) ? v.join(" ") : v).join(" ")
+      : "Registration failed"; // fixed (was 'object.entries')
+    toast(msg || "Registration failed", "error");
+  }
+});
+</script>
+{% endblock %}

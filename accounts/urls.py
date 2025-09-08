@@ -3,7 +3,7 @@ from .views import (
     RegisterView, LoginView, LogoutView, MeView,
     EmailVerifySendView, EmailVerifyConfirmView,
     PhoneOtpSendView, PhoneOtpVerifyView,
-    TwoFASetupStartView, TwoFAVerifyView, TwoFADisableView, TwoFALoginVerifyView,
+  
 )
 
 urlpatterns = [
@@ -18,8 +18,5 @@ urlpatterns = [
     path("phone/otp/send/",   PhoneOtpSendView.as_view(),   name="phone-otp-send"),
     path("phone/otp/verify/", PhoneOtpVerifyView.as_view(), name="phone-otp-verify"),
 
-    path("2fa/setup/",         TwoFASetupStartView.as_view(),  name="2fa-setup"),
-    path("2fa/verify/",        TwoFAVerifyView.as_view(),      name="2fa-verify"),
-    path("2fa/disable/",       TwoFADisableView.as_view(),     name="2fa-disable"),
-    path("2fa/login-verify/",  TwoFALoginVerifyView.as_view(), name="2fa-login-verify"),
+
 ]

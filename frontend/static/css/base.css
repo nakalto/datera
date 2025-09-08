@@ -1,0 +1,180 @@
+/* 
+  Theme variables: these define the core colors, sizes, and shadows 
+  you can reuse everywhere with var(--name).
+*/
+:root {
+  --bg: #0b0b0f;         /* page background */
+  --panel: #15151c;      /* card/panel background */
+  --text: #ececf1;       /* main text color */
+  --muted: #a0a6ad;      /* secondary/subtle text */
+  --brand: #6c7bff;      /* accent / primary button color */
+  --brand-hover: #5a69e6;/* brand color when hovered */
+  --danger: #ff6b6b;     /* red color for error states */
+  --border: #232332;     /* border color for inputs/cards */
+  --input: #101019;      /* input background color */
+  --radius: 12px;        /* corner roundness */
+  --shadow: 0 10px 30px rgba(0,0,0,.35); /* shadow for depth */
+}
+
+/* 
+  Reset sizing: ensures padding & border count inside element’s width/height.
+*/
+* { box-sizing: border-box; }
+
+/* 
+  Base layout: give html and body full height to allow centering.
+*/
+html, body { height: 100%; }
+
+/* 
+  Body styling: remove margin, set dark background & font. 
+  Use system fonts for performance & consistent look.
+*/
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Color Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 
+  Page wrapper: centers content in the viewport using grid.
+*/
+.page { 
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* 
+  Auth card: container for login/register/verify forms. 
+  Adds background, rounded corners, shadow, and padding.
+*/
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+/* 
+  Typography: heading, subtitle, muted text.
+*/
+h1 { margin: 0 0 8px; line-height: 1.2; font-weight: 700; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+.center { text-align: center; }
+.muted { color: var(--muted); }
+
+/* 
+  Form labels: block display with spacing and boldness.
+*/
+label { display: block; margin: 12px 0 6px; font-weight: 600; font-size: .95rem; }
+
+/* 
+  Input fields: consistent padding, dark background, rounded corners. 
+  Transition for focus states.
+*/
+input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+input::placeholder { color: #7b8190; } /* style for placeholder text */
+input:focus {
+  border-color: var(--brand);                 /* highlight border on focus */
+  box-shadow: 0 0 0 3px rgba(108,123,255,.2); /* subtle glow */
+}
+
+/* 
+  Layout helpers: horizontal row and 2-column grid.
+*/
+.row { display: flex; gap: 8px; align-items: center; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* 
+  Button styling: brand-colored, rounded, bold text, hover and active states.
+*/
+.btn {
+  display: inline-block;
+  width: 100%;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 16px;
+  transition: transform .05s ease, filter .15s ease, background .15s ease;
+}
+.btn:hover { background: var(--brand-hover); filter: brightness(1.04); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .6; cursor: not-allowed; }
+
+/* 
+  Link-styled button: for "Show/Hide password".
+*/
+.link {
+  background: transparent;
+  border: none;
+  color: var(--brand);
+  cursor: pointer;
+  padding: 0 8px;
+  font-weight: 600;
+}
+
+/* 
+  Toast notifications: pop-up messages shown bottom right.
+*/
+.toast {
+  position: fixed; 
+  right: 20px; bottom: 20px;
+  min-width: 240px;
+  background: #1b1b24;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: none;            /* hidden by default */
+  z-index: 1000;            /* sit above other elements */
+}
+.toast.show { display: block; animation: fade 3.5s ease both; } /* when .show is added */
+.toast.error { border-color: var(--danger); } /* red border for error type */
+
+/* 
+  Toast animation: fade in, stay, fade out.
+*/
+@keyframes fade {
+  0% { opacity: 0; transform: translateY(8px); }
+  10% { opacity: 1; transform: none; }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(8px); }
+}
+
+/* 
+  Responsive tweaks: for small screens (mobile).
+*/
+@media (max-width: 520px) {
+  .page { padding: 16px; }              /* reduce padding */
+  .auth-card { padding: 18px; }         /* tighter card padding */
+  .grid-2 { grid-template-columns: 1fr; } /* stack inputs instead of side-by-side */
+}
+
+/* 
+  Accessibility: if user prefers reduced motion, disable animations/transitions.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .toast.show { animation: none; display: block; }
+  .btn, input { transition: none; }
+}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Discover • Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Discover</h1>
+  <div id="cards"></div>
+</section>
+
+<!-- tiny modal for composing the first message -->
+<div id="dmModal" class="auth-card" style="display:none; position:fixed; inset:0; margin:auto; max-width:420px; z-index:1001">
+  <h1>Say hi</h1>
+  <form id="dmForm">
+    {% csrf_token %}
+    <input type="hidden" name="user_id">
+    <label>Message</label>
+    <input name="body" placeholder="Your first message">
+    <button class="btn" type="submit">Send</button>
+    <button class="btn" type="button" onclick="closeDm()">Cancel</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadCards(){
+  const r = await fetch("/api/discovery/cards/");
+  const data = await r.json();
+  const items = data.results || data; // DRF pagination or plain list
+  const el = document.getElementById("cards");
+  el.innerHTML = items.map(p => `
+    <div style="border:1px solid var(--border); border-radius:10px; padding:10px; margin:10px 0">
+      <div><strong>${p.display_name || "User"}</strong></div>
+      <div class="muted">${p.gender || "-"} · seeking ${p.seeking || "-"}</div>
+      <div class="muted">${p.location || "-"}</div>
+      <div style="margin-top:8px"><button class="btn" onclick='openDm(${p.user_id},"${(p.display_name||"User").replaceAll("'","\\'")}")'>Message</button></div>
+    </div>
+  `).join("") || "No profiles yet.";
+}
+function openDm(userId, name){
+  document.querySelector('#dmForm [name=user_id]').value = userId;
+  document.querySelector('#dmModal h1').textContent = `Say hi to ${name}`;
+  document.getElementById("dmModal").style.display = "block";
+}
+function closeDm(){
+  document.getElementById("dmModal").style.display = "none";
+}
+document.getElementById("dmForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const userId = fd.get("user_id");
+  const body = (fd.get("body") || "").trim();
+  if (!body) return toast("Message required","error");
+  const r = await fetch(`/api/chat/send/${userId}/`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "X-CSRFToken": getCsrf() },
+    body: JSON.stringify({ body })
+  });
+  const j = await r.json().catch(()=> ({}));
+  if (r.status === 201) {
+    toast("Sent ✅");
+    closeDm();
+  } else if (r.status === 402) {
+    toast("Activate access to continue", "error");
+    window.location.href = "/payments/activate/"; // you’ll wire the page
+  } else if (r.status === 401) {
+    window.location.href = "/auth/login/";
+  } else {
+    toast(j.detail || "Failed to send", "error");
+  }
+});
+document.addEventListener("DOMContentLoaded", loadCards);
+</script>
+{% endblock %}

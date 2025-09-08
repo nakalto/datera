@@ -136,32 +136,3 @@ class OtpVerifySerializer(serializers.Serializer):
         return attrs
 
 
-class TwoFASetupStartSerializer(serializers.Serializer):
-    # this serializer does not accept input; the view simply returns a secret and otpauth URI
-    # keeping a serializer here makes it easy to add fields later without changing the view signature
-    def to_representation(self, instance):
-        # return the instance as-is so the view can return a dict with secret and otpauth_uri
-        return instance
-
-
-class TwoFAVerifySerializer(serializers.Serializer):
-    # the client submits the 6-digit TOTP from their authenticator app during setup
-    code = serializers.CharField()
-
-    def validate(self, attrs):
-        # the request object is provided via serializer context so we can read the current user
-        user: User = self.context["request"].user
-        # ensure a secret exists before verifying a TOTP code
-        if not user.twofa_secret:
-            raise serializers.ValidationError("2FA is not in setup state")
-        # build a TOTP verifier and check the submitted code
-        totp = pyotp.TOTP(user.twofa_secret)
-        # valid_window allows a small amount of clock drift
-        if not totp.verify(attrs["code"], valid_window=1):
-            raise serializers.ValidationError("Invalid code")
-        return attrs
-
-
-class TwoFADisableSerializer(serializers.Serializer):
-    # a boolean confirmation is required to prevent accidental disables
-    confirm = serializers.BooleanField()

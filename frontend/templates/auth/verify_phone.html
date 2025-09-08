@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Verify Phone • Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Verify your phone</h1>
+
+  <form id="sendOtpForm" method="post" action="/api/auth/phone/otp/send/">
+    {% csrf_token %}
+    <label>Phone number</label>
+    <input name="phone" placeholder="+255..." required>
+    <button class="btn w-100" type="submit">Send OTP</button>
+  </form>
+
+  <form id="verifyOtpForm" method="post" action="/api/auth/phone/otp/verify/" style="margin-top:12px">
+    {% csrf_token %}
+    <label>Enter OTP</label>
+    <input name="phone" placeholder="+255..." required>
+    <input name="code" placeholder="123456" required>
+    <button class="btn w-100" type="submit">Verify</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("sendOtpForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+  const res = await fetch(form.action, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsRFOrMeta() },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json().catch(()=> ({}));
+  if (res.ok) toast("OTP sent");
+  else toast((typeof json==="object"?Object.values(json).join(" "):"Failed"), "error");
+});
+
+document.getElementById("verifyOtpForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+  const res = await fetch(form.action, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsRFOrMeta() },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json().catch(()=> ({}));
+  if (res.ok) { toast("Phone verified"); window.location.href = "/dashboard/"; }
+  else toast((typeof json==="object"?Object.values(json).join(" "):"Failed"), "error");
+});
+
+function getCsRFOrMeta(){ return getCsrf() || (document.querySelector('input[name=csrfmiddlewaretoken]')?.value || ""); }
+</script>
+{% endblock %}

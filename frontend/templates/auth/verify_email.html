@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Verify Email • Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Verify your email</h1>
+  <p class="sub">If you opened this page from the email link, the token should be in the URL.</p>
+
+  <form id="emailVerifyForm" method="post" action="/api/auth/email/confirm/">
+    {% csrf_token %}
+    <label>Token</label>
+    <input name="token" required>
+    <button class="btn w-100" type="submit">Verify</button>
+  </form>
+
+  <form id="resendForm" method="post" action="/api/auth/email/send-verify/" style="margin-top:12px">
+    {% csrf_token %}
+    <label>Resend verification to email</label>
+    <input name="email" type="email" placeholder="you@example.com" required>
+    <button class="btn w-100" type="submit">Send new link</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+const params = new URLSearchParams(window.location.search);
+const t = params.get("token");
+if (t) document.querySelector('input[name=token]').value = t;
+
+document.getElementById("emailVerifyForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+  const res = await fetch(form.action, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json().catch(()=> ({}));
+  if (res.ok) {
+    toast("Email verified");
+    window.location.href = "/auth/login/";
+  } else {
+    const msg = typeof json === "object" ? Object.values(json).join(" ") : "Failed";
+    toast(msg, "error");
+  }
+});
+
+document.getElementById("resendForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+  const res = await fetch(form.action, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json().catch(()=> ({}));
+  if (res.ok) {
+    toast("Verification email sent");
+  } else {
+    const msg = typeof json === "object" ? Object.values(json).join(" ") : "Failed";
+    toast(msg, "error");
+  }
+});
+</script>
+{% endblock %}

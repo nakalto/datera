@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dashboard • Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <!-- dynamic welcome text -->
+  <h1 id="welcome">Dashboard</h1>
+  <p class="sub">Your account overview</p>
+
+  <!-- user info snapshot -->
+  <div style="margin:16px 0">
+    <p><strong>Email:</strong> <span id="email"></span></p>
+    <p><strong>Phone:</strong> <span id="phone"></span></p>
+    <p><strong>Email verified:</strong> <span id="email_verified"></span></p>
+    <p><strong>Phone verified:</strong> <span id="phone_verified"></span></p>
+    
+  </div>
+
+  <!-- dashboard actions -->
+  <div style="display:grid; gap:12px; margin-top:12px">
+    <a class="btn" href="/profile/edit/">Edit profile</a>
+  
+    <a class="btn" href="/payments/activate/">Activate connection access</a>
+  
+  <a class="btn" href="/discover/">Browse profiles</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// when dashboard loads, fetch user snapshot
+async function loadMe() {
+  try {
+    const res = await fetch("/api/auth/me/");
+    if (!res.ok) {
+      toast("Failed to load user info", "error");
+      return;
+    }
+    const user = await res.json();
+
+    // update UI
+    document.getElementById("welcome").textContent = "Welcome " + (user.display_name || "User");
+    document.getElementById("email").textContent = user.email || "-";
+    document.getElementById("phone").textContent = user.phone || "-";
+    document.getElementById("email_verified").textContent = user.email_verified ? "✅ Yes" : "❌ No";
+    document.getElementById("phone_verified").textContent = user.phone_verified ? "✅ Yes" : "❌ No";
+    document.getElementById("twofa_enabled").textContent = user.twofa_enabled ? "✅ Yes" : "❌ No";
+  } catch (err) {
+    console.error("Error loading dashboard:", err);
+    toast("Something went wrong", "error");
+  }
+}
+
+// run once page loads
+document.addEventListener("DOMContentLoaded", loadMe);
+</script>
+{% endblock %}

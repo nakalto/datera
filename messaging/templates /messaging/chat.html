@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header">
+      <img src="https://i.pravatar.cc/40?img=5" alt="profile" class="chat-avatar">
+      <span class="chat-username">Sophia</span>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message received">Hey 👋, how are you?</div>
+      <div class="chat-message sent">I’m good, thanks! You?</div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <!-- JavaScript in same page -->
+  <script>
+    document.getElementById("sendBtn").addEventListener("click", sendMessage);
+    document.getElementById("messageInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const messageText = input.value.trim();
+
+      if (messageText === "") return;
+
+      const messageContainer = document.createElement("div");
+      messageContainer.classList.add("chat-message", "sent");
+      messageContainer.textContent = messageText;
+
+      const chatBox = document.getElementById("chatMessages");
+      chatBox.appendChild(messageContainer);
+
+      // scroll to bottom
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      input.value = "";
+    }
+  </script>
+</body>
+</html>

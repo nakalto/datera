@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile • Datera{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Edit profile</h1>
+  <form id="pfForm">
+    {% csrf_token %}
+    <label>Display name</label><input name="display_name">
+    <label>Bio</label><input name="bio">
+    <div class="grid-2">
+      <div><label>Gender</label><input name="gender" placeholder="Male/Female/Other"></div>
+      <div><label>Seeking</label><input name="seeking" placeholder="Men/Women/Everyone"></div>
+    </div>
+    <div class="grid-2">
+      <div><label>DOB</label><input name="dob" type="date"></div>
+      <div><label>Location</label><input name="location" placeholder="City, Country"></div>
+    </div>
+    <label>Visible</label><input type="checkbox" name="is_visible">
+    <button class="btn" type="submit">Save</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadMeProfile(){
+  const r = await fetch("/api/profiles/me/");
+  if(!r.ok) return toast("Failed to load profile","error");
+  const p = await r.json();
+  for (const [k,v] of Object.entries(p)) {
+    const el = document.querySelector(`[name="${k}"]`);
+    if(!el) continue;
+    if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? "";
+  }
+}
+document.getElementById("pfForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  // checkbox normalization
+  if (!fd.has("is_visible")) fd.set("is_visible", "off");
+  const data = Object.fromEntries(fd.entries());
+  data.is_visible = !!document.querySelector('[name="is_visible"]').checked;
+  const r = await fetch("/api/profiles/me/update/", {
+    method:"PUT",
+    headers:{ "Content-Type":"application/json", "X-CSRFToken": getCsrf() },
+    body: JSON.stringify(data)
+  });
+  if (r.ok) toast("Saved ✓"); else toast("Save failed","error");
+});
+document.addEventListener("DOMContentLoaded", loadMeProfile);
+</script>
+{% endblock %}

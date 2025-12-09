@@ -1,0 +1,28 @@
+<!-- accounts/templates/accounts/start_login.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Page title -->
+    <title>Login with Phone</title>
+</head>
+<body>
+    <!-- Display error or success messages -->
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Login form -->
+    <form method="post">
+        {% csrf_token %}
+        <!-- Input for phone number -->
+        <label for="phone">Phone number:</label>
+        <input type="text" name="phone" id="phone" placeholder="+255712345678" required>
+        <button type="submit">Send OTP</button>
+    </form>
+</body>
+</html>

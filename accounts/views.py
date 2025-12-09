@@ -1,16 +1,12 @@
-# Import render (to display templates) and redirect (to navigate to another view)
 from django.shortcuts import render, redirect
 
 # Import get_user_model (to fetch custom User model) and login (to log user into session)
 from django.contrib.auth import get_user_model, login
-
-# Import Django messages framework (for success/error feedback to user)
 from django.contrib import messages
 
 # Restrict views to certain HTTP methods (GET and POST only)
 from django.views.decorators.http import require_http_methods
 
-# Import our OTP generator function
 from .otp import create_otp
 
 # Import OTP model
@@ -22,11 +18,8 @@ from .phone import normalize_msisdn, is_valid_tz
 # Import SMS sending function
 from .sms import send_sms
 
-
 # Get the custom User model defined in accounts/models.py
 User = get_user_model()
-
-
 # Restrict this view to GET and POST requests
 @require_http_methods(["GET", "POST"])
 def start_login(request):
@@ -63,7 +56,6 @@ def start_login(request):
     # If request is GET, show login form
     return render(request, 'accounts/start_login.html')
 
-
 # Restrict this view to GET and POST requests
 @require_http_methods(["GET", "POST"])
 def verify(request):
@@ -88,34 +80,27 @@ def verify(request):
         # If no OTP found, show error and re-render verify form
         if not otp:
             messages.error(request, 'No code found. Please request a new one.')
-            return render(request, 'accounts/verify.html')
+            return render(request, 'accounts/verify.html', {'user': user})
 
         # Increment attempts counter
         otp.attempts += 1
-        # Save updated attempts count
         otp.save(update_fields=['attempts'])
 
         # If OTP is valid and code matches
         if otp.is_valid() and otp.code == code:
-            # Mark OTP as consumed
             otp.consumed = True
             otp.save(update_fields=['consumed'])
 
-            # Mark user's phone as verified
             user.phone_verified = True
             user.save(update_fields=['phone_verified'])
 
-            # Log user into Django session
             login(request, user)
-
-            # Show success message
             messages.success(request, 'Logged in successfully.')
-
-            # Redirect to profile onboarding
             return redirect('profiles:onboarding')
 
         # If OTP invalid or expired, show error
         messages.error(request, 'Invalid or expired code.')
-
-        # Re-render verify form with user context
         return render(request, 'accounts/verify.html', {'user': user})
+
+    # ✅ Important: handle GET request by rendering the verify form
+    return render(request, 'accounts/verify.html', {'user': user})

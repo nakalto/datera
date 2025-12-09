@@ -1,0 +1,25 @@
+<!-- accounts/templates/accounts/verify.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Verify OTP</title>
+</head>
+<body>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- OTP verification form -->
+    <form method="post">
+        {% csrf_token %}
+        <label for="code">Enter OTP code:</label>
+        <input type="text" name="code" id="code" required>
+        <button type="submit">Verify</button>
+    </form>
+</body>
+</html>

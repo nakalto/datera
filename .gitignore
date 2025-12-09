@@ -1,0 +1,37 @@
+
+# ---- Python / Django ----
+*.pyc
+__pycache__/
+db.sqlite3
+*.log
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Static + Media (generated files)
+staticfiles/
+media/
+
+# Django collectstatic output
+static/
+
+# ---- Environment Secrets ----
+.env
+.env.*
+
+# ---- OS & Editor Trash ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- Python build junk ----
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# Byte-compiled stuff
+*.pdb

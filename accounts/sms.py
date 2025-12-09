@@ -1,18 +1,10 @@
-# Import Python's os module to read environment variables
 import os
-
-# Import Africa's Talking SDK for sending SMS in production
 import africastalking
-
-
 # Define function send_sms with parameters:
 # - msisdn: phone number in E.164 format (e.g., +255712345678)
-# - message: text message to send
 def send_sms(msisdn, message):
-
     # Read SMS provider from environment variable, default to 'mock'
     provider = os.getenv('SMS_PROVIDER', 'mock')
-
     # If provider is set to 'mock' (development mode)
     if provider == 'mock':
         # Print simulated SMS to console for debugging

@@ -14,10 +14,8 @@ from .models import OTP
 
 # Import phone utilities (normalize and validate Tanzanian numbers)
 from .phone import normalize_msisdn, is_valid_tz
-
 # Import SMS sending function
 from .sms import send_sms
-
 # Get the custom User model defined in accounts/models.py
 User = get_user_model()
 # Restrict this view to GET and POST requests

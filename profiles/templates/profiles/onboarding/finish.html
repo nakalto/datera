@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Onboarding Complete</title>
+    <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
+    <style>
+        .profile-card {
+            width: 300px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            text-align: center;
+            background-color: #fff;
+        }
+        .profile-photo {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .profile-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .profile-info {
+            font-size: 16px;
+            color: #555;
+            margin: 5px 0;
+        }
+        .profile-bio {
+            margin-top: 10px;
+            font-style: italic;
+            color: #333;
+        }
+        .cta {
+            margin-top: 20px;
+        }
+        .cta a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-card">
+        {% if profile.photo %}
+            <img src="{{ profile.photo.url }}" alt="Profile photo" class="profile-photo">
+        {% endif %}
+
+        <div class="profile-name">{{ profile.name }}</div>
+        <div class="profile-info">Gender: {{ profile.gender }}</div>
+        <div class="profile-info">Birthday: {{ profile.birthday }}</div>
+        <div class="profile-bio">{{ profile.bio }}</div>
+
+        <div class="cta">
+            <a href="/">Start Exploring</a>
+        </div>
+    </div>
+</body>
+</html>

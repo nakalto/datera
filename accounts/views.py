@@ -54,20 +54,28 @@ def start_login(request):
     # If request is GET, show login form
     return render(request, 'accounts/start_login.html')
 
+
 # Restrict this view to GET and POST requests
 @require_http_methods(["GET", "POST"])
 def verify(request):
-    # Get pending user ID from session
-    uid = request.session.get('pending_user_id')
+    """
+    Handles OTP verification:
+    - GET → show OTP form
+    - POST → check OTP validity
+    - If valid → log user in, then redirect:
+        * Dashboard if onboarding_complete=True
+        * Onboarding flow if onboarding_complete=False
+    """
 
-    # If no user ID in session, redirect back to login
+    # 1. Get pending user ID from session
+    uid = request.session.get('pending_user_id')
     if not uid:
         return redirect('accounts:start_login')
 
-    # Fetch user from database
+    # 2. Fetch user from database
     user = User.objects.get(id=uid)
 
-    # If the request is a POST (form submitted)
+    # 3. Handle POST (form submitted)
     if request.method == "POST":
         # Get OTP code from form input, strip spaces
         code = request.POST.get("code", "").strip()
@@ -75,7 +83,7 @@ def verify(request):
         # Find latest OTP for this user with purpose 'phone_login'
         otp = OTP.objects.filter(user=user, purpose='phone_login').order_by('-created_at').first()
 
-        # If no OTP found, show error and re-render verify form
+        # If no OTP found
         if not otp:
             messages.error(request, 'No code found. Please request a new one.')
             return render(request, 'accounts/verify.html', {'user': user})
@@ -84,21 +92,49 @@ def verify(request):
         otp.attempts += 1
         otp.save(update_fields=['attempts'])
 
-        # If OTP is valid and code matches
+        # If OTP is valid and matches
         if otp.is_valid() and otp.code == code:
             otp.consumed = True
             otp.save(update_fields=['consumed'])
 
+            # Mark phone verified
             user.phone_verified = True
             user.save(update_fields=['phone_verified'])
 
+            # Log the user in
             login(request, user)
             messages.success(request, 'Logged in successfully.')
-            return redirect('profiles:onboarding')
 
-        # If OTP invalid or expired, show error
+            # ✅ Redirect based on onboarding status
+            if user.onboarding_complete:
+                return redirect('accounts:dashboard')
+            else:
+                return redirect('profiles:onboarding_name')
+
+        # If OTP invalid or expired
         messages.error(request, 'Invalid or expired code.')
         return render(request, 'accounts/verify.html', {'user': user})
 
-    # ✅ Important: handle GET request by rendering the verify form
+    # 4. Handle GET → show OTP form
     return render(request, 'accounts/verify.html', {'user': user})
+
+
+from accounts.models import User
+
+def dashboard(request):
+    """
+    Dashboard view:
+    - Shows logged-in user's info
+    - Displays other users who completed onboarding
+    """
+    # Exclude the logged-in user, only show completed profiles
+    users = User.objects.exclude(id=request.user.id).filter(onboarding_complete=True)
+
+    return render(
+        request,
+        "accounts/dashboard.html",
+        {
+            "user": request.user,   # current logged-in user
+            "users": users          # queryset for the loop
+        }
+    )

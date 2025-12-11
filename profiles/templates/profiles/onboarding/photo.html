@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Onboarding - Photo</title>
+    <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
+</head>
+<body>
+    <div class="form-wrapper">
+        <h1>Step 5: Upload Photo</h1>
+
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {{ progress }}%;"></div>
+        </div>
+        <p>{{ progress }}% complete</p>
+
+        <!-- Upload form -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="photo">Choose a profile photo:</label><br>
+            <input type="file" name="photo" id="photo" accept="image/*" required><br><br>
+            <button type="submit">Finish</button>
+        </form>
+
+        <!-- Preview uploaded photo if available -->
+        {% if profile.photo %}
+            <div class="photo-preview">
+                <h3>Current Photo:</h3>
+                <img src="{{ profile.photo.url }}" alt="Profile photo" class="preview-img">
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,22 +1,26 @@
 {% load static %}
+<! DOCTYPE html>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Onboarding - Name</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    {% load static %}
     <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
+
 </head>
 <body>
     <div class="form-wrapper">
-        <h1>Step 1: Your Name</h1>
-
+        <h1>Step 4: your Bio</h1>
         <div class="progress-container">
-            <div class="progress-bar" style="width: {{ progress }}%;"></div>
+            <div style="width: {{ progress }}%;"></div>
         </div>
         <p>{{ progress }}% complete</p>
 
         <form method="post">
             {% csrf_token %}
-            <input type="text" name="name" placeholder="Enter your name" required>
+            <textarea name="bio" placeholder="Tell us about yourself..." rows="4" required></textarea>
             <button type="submit">Next</button>
         </form>
     </div>

@@ -14,4 +14,6 @@ urlpatterns = [
 
     # Route for OTP verification page → calls verify view
     path('verify/', views.verify, name='verify'),
+
+    path("dashboard/", views.dashboard, name="dashboard"),
 ]

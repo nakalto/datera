@@ -1,25 +1,35 @@
-<!-- accounts/templates/accounts/verify.html -->
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Verify OTP</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/auth.css' %}">
 </head>
 <body>
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <div class="auth-wrapper">
+        <h1>Verify OTP</h1>
+        <p>Please enter the verification code sent to your phone.</p>
 
-    <!-- OTP verification form -->
-    <form method="post">
-        {% csrf_token %}
-        <label for="code">Enter OTP code:</label>
-        <input type="text" name="code" id="code" required>
-        <button type="submit">Verify</button>
-    </form>
+        <!-- Display error or success messages -->
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- OTP verification form -->
+        <form method="post">
+            {% csrf_token %}
+            <label for="code">Enter OTP code:</label><br>
+            <input type="text" name="code" id="code" placeholder="123456" required><br>
+            <button type="submit">Verify</button>
+        </form>
+
+        <!-- Optional link back to login -->
+        <a href="{% url 'accounts:start_login' %}">Back to Login</a>
+    </div>
 </body>
 </html>

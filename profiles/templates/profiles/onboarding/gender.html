@@ -2,12 +2,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Onboarding - Name</title>
+    <title>Onboarding - Gender</title>
     <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
 </head>
 <body>
     <div class="form-wrapper">
-        <h1>Step 1: Your Name</h1>
+        <h1>Step 2: Your Gender</h1>
 
         <div class="progress-container">
             <div class="progress-bar" style="width: {{ progress }}%;"></div>
@@ -16,7 +16,12 @@
 
         <form method="post">
             {% csrf_token %}
-            <input type="text" name="name" placeholder="Enter your name" required>
+            <select name="gender" required>
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
             <button type="submit">Next</button>
         </form>
     </div>

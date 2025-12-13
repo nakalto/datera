@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'profiles',
     'discovery',
     'chat',
+    'interactions',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

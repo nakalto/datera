@@ -16,4 +16,10 @@ urlpatterns = [
     path('verify/', views.verify, name='verify'),
 
     path("dashboard/", views.dashboard, name="dashboard"),
+
+    path("explore/", views.explore, name="explore"),
+
+    path("profile/", views.profile, name="profile"),
+
+       path("profile/<int:user_id>/", views.profile_view, name="profile_view"), 
 ]

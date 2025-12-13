@@ -7,65 +7,134 @@
         body {
             font-family: Arial, sans-serif;
             background: #f5f5f5;
-            text-align: center;
+            margin: 0;
         }
-        .card {
-            width: 300px;
-            margin: 40px auto;
-            padding: 15px;
+
+        header {
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        header a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            padding: 10px;
+        }
+
+        header a:hover {
+            color: #ff3366;
+        }
+
+        .container {
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .profile-card {
+            width: 250px;
+            margin: 15px;
             background: #fff;
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            position: relative;
+            overflow: hidden;
+            text-align: center;
+            padding-bottom: 15px;
         }
-        .card img {
+
+        .profile-card img {
             width: 100%;
-            border-radius: 15px;
+            height: 200px;
+            object-fit: cover;
         }
+
+        .profile-card h3 {
+            margin: 10px 0;
+        }
+
+        .profile-card p {
+            font-size: 14px;
+            color: #555;
+            margin: 5px 10px;
+        }
+
+        .goals {
+            font-size: 12px;
+            color: #007bff;
+            margin-top: 5px;
+        }
+
         .actions {
-            margin-top: 15px;
+            margin-top: 10px;
         }
-        .btn {
-            padding: 12px 20px;
+
+        .actions form {
+            display: inline-block;
             margin: 5px;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
         }
-        .like { background-color: #4CAF50; color: white; }
-        .dislike { background-color: #f44336; color: white; }
+
+        .actions button {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .like-btn {
+            background: #ff3366;
+            color: #fff;
+        }
+
+        .dislike-btn {
+            background: #ccc;
+            color: #333;
+        }
     </style>
 </head>
 <body>
-    <!-- Show logged-in user’s name or fallback to username -->
-    <h1>Welcome, {{ user.full_name|default:user.username }}</h1>
+    <!-- Navigation bar -->
+    <header>
+        <a href="{% url 'accounts:dashboard' %}">🏠 Home</a>
+        <a href="{% url 'accounts:explore' %}">🔍 Explore</a>
+        <a href="{% url 'interactions:matches_dashboard' %}">💬 Chat</a>
+        <a href="{% url 'interactions:likes_dashboard' %}">❤️ Likes</a>
+        <a href="{% url 'accounts:profile' %}">👤 Profile</a>
+    </header>
 
-    <!-- Loop through all other users -->
-    {% for u in users %}
-    <div class="card">
-        <!-- Profile photo or default avatar -->
-        {% if u.profile_photo %}
-            <img src="{{ u.profile_photo.url }}" alt="{{ u.full_name }}">
-        {% else %}
-            <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
-        {% endif %}
+    <!-- People cards -->
+    <div class="container">
+        {% for person in users %}
+            <div class="profile-card">
+                {% if person.profile_photo %}
+                    <img src="{{ person.profile_photo.url }}" alt="{{ person.full_name }}">
+                {% else %}
+                    <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
+                {% endif %}
+                <h3>{{ person.full_name }}</h3>
+                <p>{{ person.bio|default:"No bio yet." }}</p>
+                <p class="goals">Goal: {{ person.relationship_goal|default:"Not specified" }}</p>
 
-        <!-- Show name, bio, gender, birthday with fallbacks -->
-        <h2>{{ u.full_name|default:"Anonymous" }}</h2>
-        <p>{{ u.bio|default:"No bio yet." }}</p>
-        <p>Gender: {{ u.gender|default:"Not specified" }}</p>
-        <p>Birthday: {{ u.birthday|date:"F j, Y"|default:"Not provided" }}</p>
-
-        <!-- Tinder-style like/dislike buttons -->
-        <div class="actions">
-            <button class="btn dislike">❌</button>
-            <button class="btn like">❤️</button>
-        </div>
+                <!-- Like/Dislike buttons -->
+                <div class="actions">
+                    <form method="post" action="{% url 'interactions:like_user' person.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="like-btn">❤️ Like</button>
+                    </form>
+                    <form method="post" action="{% url 'interactions:dislike_user' person.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dislike-btn">❌ Dislike</button>
+                    </form>
+                </div>
+            </div>
+        {% empty %}
+            <p>No other people yet. Invite friends to join!</p>
+        {% endfor %}
     </div>
-    {% empty %}
-    <!-- If no users found -->
-    <p>No profiles available right now.</p>
-    {% endfor %}
 </body>
 </html>

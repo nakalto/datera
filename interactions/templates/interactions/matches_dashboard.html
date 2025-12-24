@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Matches - Datera</title>
+    {% load static %}
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin:0; }
+        header {
+            background:#fff; padding:15px; text-align:center;
+            font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);
+        }
+        .match-list { background:#fff; margin-top:10px; }
+        .match-row {
+            display:flex; align-items:center;
+            padding:15px; border-bottom:1px solid #eee;
+        }
+        .match-row img {
+            width:50px; height:50px;
+            border-radius:50%; object-fit:cover;
+            margin-right:15px;
+        }
+        .match-info { flex:1; text-align:left; }
+        .match-info h3 { margin:0; font-size:16px; }
+        .match-info p { margin:2px 0; color:#555; font-size:14px; }
+        .match-info small { font-size:12px; color:#999; }
+        .match-actions { text-align:right; }
+        .match-actions a {
+            text-decoration:none; font-size:14px;
+            margin-left:10px; color:#ff3366; font-weight:bold;
+        }
+    </style>
+</head>
+<body>
+    <header>💬 Your Matches</header>
+
+    <div class="match-list">
+        {% for item in match_list %}
+            <div class="match-row">
+                <!-- Profile photo links to other user's profile -->
+                <a href="{% url 'accounts:profile_view' item.partner.id %}">
+                    {% if item.partner.profile_photo %}
+                        <img src="{{ item.partner.profile_photo.url }}" alt="{{ item.partner.full_name }}">
+                    {% else %}
+                        <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
+                    {% endif %}
+                </a>
+
+                <div class="match-info">
+                    <h3>
+                        <a href="{% url 'accounts:profile_view' item.partner.id %}" style="color:#333; text-decoration:none;">
+                            {{ item.partner.full_name|default:"Anonymous" }}
+                        </a>
+                    </h3>
+                    
+                </div>
+
+                <div class="match-actions">
+                    <!-- Chat link -->
+                    <a href="{% url 'chat:chat_view' item.match.id %}">💬 Chat</a>
+                </div>
+            </div>
+        {% empty %}
+            <p style="text-align:center; padding:20px;">No matches yet. Keep swiping!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

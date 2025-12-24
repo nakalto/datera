@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
     <style>
         .profile-card {
-            width: 300px;
+            width: 320px;
             margin: 50px auto;
             padding: 20px;
             border-radius: 12px;
@@ -39,26 +39,35 @@
         .cta a {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #4CAF50;
+            background-color: #ff3366;
             color: white;
             text-decoration: none;
             border-radius: 8px;
+            font-weight: bold;
+        }
+        .cta a:hover {
+            background-color: #ff6699;
         }
     </style>
 </head>
 <body>
     <div class="profile-card">
-        {% if profile.photo %}
-            <img src="{{ profile.photo.url }}" alt="Profile photo" class="profile-photo">
+        <!-- Show first photo if available -->
+        {% if profile.photos.all %}
+            <img src="{{ profile.photos.first.image.url }}" alt="Profile photo" class="profile-photo">
+        {% else %}
+            <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar" class="profile-photo">
         {% endif %}
 
-        <div class="profile-name">{{ profile.name }}</div>
-        <div class="profile-info">Gender: {{ profile.gender }}</div>
-        <div class="profile-info">Birthday: {{ profile.birthday }}</div>
-        <div class="profile-bio">{{ profile.bio }}</div>
+        <div class="profile-name">
+            {{ profile.full_name|default:profile.user.full_name }}
+        </div>
+        <div class="profile-info">Gender: {{ profile.gender|default:"Not specified" }}</div>
+        <div class="profile-info">Birthday: {{ profile.birthday|date:"F j, Y"|default:"Not provided" }}</div>
+        <div class="profile-bio">{{ profile.bio|default:"No bio yet." }}</div>
 
         <div class="cta">
-            <a href="/">Start Exploring</a>
+            <a href="{% url 'accounts:dashboard' %}">Start Exploring</a>
         </div>
     </div>
 </body>

@@ -5,6 +5,17 @@
     <meta charset="UTF-8">
     <title>Onboarding - Photo</title>
     <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
+    <style>
+        .photo-preview {
+            margin-top: 20px;
+        }
+        .preview-img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="form-wrapper">
@@ -24,11 +35,13 @@
             <button type="submit">Finish</button>
         </form>
 
-        <!-- Preview uploaded photo if available -->
-        {% if profile.photo %}
+        <!-- Preview uploaded photos -->
+        {% if profile.photos.all %}
             <div class="photo-preview">
-                <h3>Current Photo:</h3>
-                <img src="{{ profile.photo.url }}" alt="Profile photo" class="preview-img">
+                <h3>Your Photos:</h3>
+                {% for photo in profile.photos.all %}
+                    <img src="{{ photo.image.url }}" alt="Profile photo" class="preview-img">
+                {% endfor %}
             </div>
         {% endif %}
     </div>

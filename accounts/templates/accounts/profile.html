@@ -4,25 +4,60 @@
     <title>My Profile</title>
     {% load static %}
     <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; }
-        .profile-card {
-            width: 400px; margin: 40px auto; background: #fff;
-            border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            padding: 20px; text-align: center;
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
         }
-        .profile-card img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; }
+        .profile-card {
+            width: 400px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 20px;
+            text-align: center;
+        }
+        .profile-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        h2 { margin: 10px 0; }
+        p { margin: 5px 0; color: #555; }
     </style>
 </head>
 <body>
     <div class="profile-card">
-        {% if user.profile_photo %}
-            <img src="{{ user.profile_photo.url }}" alt="{{ user.full_name }}">
-        {% else %}
-            <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
-        {% endif %}
-        <h2>{{ user.full_name }}</h2>
-        <p>{{ user.bio|default:"No bio yet." }}</p>
-        <p>Goal: {{ user.relationship_goal|default:"Not specified" }}</p>
+        {% with first_photo=user.profile.photos.first %}
+            {% if first_photo %}
+                <!-- Show the first uploaded photo -->
+                <img src="{{ first_photo.image.url }}" alt="{{ user.profile.full_name }}">
+            {% else %}
+                <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
+            {% endif %}
+        {% endwith %}
+
+        <h2>{{ user.profile.full_name|default:"Anonymous" }}</h2>
+        <p>{{ user.profile.bio|default:"No bio yet." }}</p>
+        <p>
+            Birthday:
+            {% if user.profile.birthday %}
+                {{ user.profile.birthday|date:"F j, Y" }}
+            {% else %}
+                Not provided
+            {% endif %}
+        </p>
+        <p>
+            Goal:
+            {% if user.profile.relationship_goal %}
+                {{ user.profile.get_relationship_goal_display }}
+            {% else %}
+                Not specified
+            {% endif %}
+        </p>
     </div>
 </body>
 </html>

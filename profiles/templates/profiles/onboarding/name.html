@@ -1,19 +1,68 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Onboarding - Name</title>
     <link rel="stylesheet" href="{% static 'profiles/css/onboarding.css' %}">
+    <style>
+        .progress-container {
+            width: 100%;
+            background: #e0e0e0;
+            border-radius: 20px;
+            overflow: hidden;
+            height: 12px;
+            margin: 15px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3366, #ff6699);
+            width: 0;
+            transition: width 0.8s ease-in-out;
+        }
+        .form-wrapper {
+            max-width: 400px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        button {
+            background: #ff3366;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #ff6699;
+        }
+    </style>
 </head>
 <body>
     <div class="form-wrapper">
         <h1>Step 1: Your Name</h1>
 
+        <!-- Progress bar -->
         <div class="progress-container">
             <div class="progress-bar" style="width: {{ progress }}%;"></div>
         </div>
         <p>{{ progress }}% complete</p>
 
+        <!-- Name form -->
         <form method="post">
             {% csrf_token %}
             <input type="text" name="name" placeholder="Enter your name" required>

@@ -139,7 +139,7 @@ STATICFILES_DIRS = [BASE_DIR/'static'] #directory for static files
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-LOGIN_URL = 'accounts:login'
+LOGIN_URL = 'accounts:start_login'
 LOGIN_REDIRECT_URL = 'discovery:home'
 
 

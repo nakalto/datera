@@ -9,9 +9,10 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 
 from .otp import create_otp
-
-# Import OTP model
+from accounts.models import User
+from profiles.models import Profile  # import your Profile model
 from .models import OTP
+from django.core.paginator import Paginator
 
 # Import phone utilities (normalize and validate Tanzanian numbers)
 from .phone import normalize_msisdn, is_valid_tz
@@ -76,83 +77,121 @@ def verify(request):
     # 2. Fetch user from database
     user = User.objects.get(id=uid)
 
+    # Ensure the user has a Profile
+    profile, created = Profile.objects.get_or_create(user=user)
+
     # 3. Handle POST (form submitted)
     if request.method == "POST":
-        # Get OTP code from form input, strip spaces
         code = request.POST.get("code", "").strip()
 
-        # Find latest OTP for this user with purpose 'phone_login'
         otp = OTP.objects.filter(user=user, purpose='phone_login').order_by('-created_at').first()
 
-        # If no OTP found
         if not otp:
             messages.error(request, 'No code found. Please request a new one.')
             return render(request, 'accounts/verify.html', {'user': user})
 
-        # Increment attempts counter
         otp.attempts += 1
         otp.save(update_fields=['attempts'])
 
-        # If OTP is valid and matches
         if otp.is_valid() and otp.code == code:
             otp.consumed = True
             otp.save(update_fields=['consumed'])
 
-            # Mark phone verified
             user.phone_verified = True
             user.save(update_fields=['phone_verified'])
 
-            # Log the user in
             login(request, user)
             messages.success(request, 'Logged in successfully.')
 
             # ✅ Redirect based on onboarding status
-            if user.onboarding_complete:
+            if profile.onboarding_complete:
                 return redirect('accounts:dashboard')
             else:
                 return redirect('profiles:onboarding_name')
 
-        # If OTP invalid or expired
         messages.error(request, 'Invalid or expired code.')
         return render(request, 'accounts/verify.html', {'user': user})
 
     # 4. Handle GET → show OTP form
     return render(request, 'accounts/verify.html', {'user': user})
 
+                                  
 
-from accounts.models import User
-
+@login_required
 def dashboard(request):
-    """
-    Dashboard view:
-    - Shows logged-in user's info
-    - Displays other users who completed onboarding
-    """
-    # Exclude the logged-in user, only show completed profiles
-    users = User.objects.exclude(id=request.user.id).filter(onboarding_complete=True)
+    profile = request.user.profile   # Current user's profile
+
+    # Base queryset: all other onboarded profiles
+    profiles = (
+        Profile.objects
+        .filter(onboarding_complete=True)
+        .exclude(user=request.user)
+        .select_related("user")
+        .prefetch_related("photos")
+    )
+
+    # Apply gender filter only if preference is M or F
+    if profile.looking_for == "M":
+        profiles = profiles.filter(gender="M")
+    elif profile.looking_for == "F":
+        profiles = profiles.filter(gender="F")
+    # If "A" (All), no filter applied
 
     return render(
         request,
         "accounts/dashboard.html",
         {
-            "user": request.user,   # current logged-in user
-            "users": users          # queryset for the loop
+            "profile": profile,             # current user profile
+            "profiles": profiles,           # other profiles
+            "my_photos": profile.photos.all()  # current user's photos
         }
     )
+
 
 @login_required
 def explore(request):
     """
     Explore view:
-    - Shows goal-driven categories 
+    - Default: shows goal-driven categories with counts
+    - If ?goal= is provided, shows profiles in that category
+    - Supports pagination for profile lists
     """
-    goals = {
-        "longterm": User.objects.filter(relationship_goal="longterm", onboarding_complete=True).count(),
-        "serious": User.objects.filter(relationship_goal="serious", onboarding_complete=True).count(),
-        "freetonight": User.objects.filter(relationship_goal="freetonight", onboarding_complete=True).count(),
-        "shortterm": User.objects.filter(relationship_goal="shortterm", onboarding_complete=True).count(),
-    }
-    return render(request, "accounts/explore.html", {"goals": goals})
+
+    goal = request.GET.get("goal")   # Read ?goal= parameter from URL
+    page_number = request.GET.get("page", 1)   # Read ?page= parameter (default = 1)
+
+    if goal:
+        # Show profiles for selected goal
+        profiles_qs = Profile.objects.filter(
+            relationship_goal=goal,
+            onboarding_complete=True
+        ).select_related("user").prefetch_related("photos")
+
+        # Paginate results (10 profiles per page)
+        paginator = Paginator(profiles_qs, 10)
+        profiles = paginator.get_page(page_number)
+
+        return render(
+            request,
+            "accounts/explore.html",
+            {
+                "profiles": profiles,   # Paginated profiles
+                "goal": goal            # Current goal for heading + pagination links
+            }
+        )
+    else:
+        # Show counts for all goals
+        goals = {
+            "longterm": Profile.objects.filter(relationship_goal="longterm", onboarding_complete=True).count(),
+            "serious": Profile.objects.filter(relationship_goal="serious", onboarding_complete=True).count(),
+            "freetonight": Profile.objects.filter(relationship_goal="freetonight", onboarding_complete=True).count(),
+            "shortterm": Profile.objects.filter(relationship_goal="shortterm", onboarding_complete=True).count(),
+            "friendship": Profile.objects.filter(relationship_goal="friendship", onboarding_complete=True).count(),
+            "unsure": Profile.objects.filter(relationship_goal="unsure", onboarding_complete=True).count(),
+        }
+
+        return render(request, "accounts/explore.html", {"goals": goals})
+
 
 
 @login_required

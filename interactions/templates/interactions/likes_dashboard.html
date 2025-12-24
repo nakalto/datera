@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>People Who Liked You</title>
+    {% load static %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        header {
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+        }
+        header a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            padding: 10px;
+        }
+        header a:hover { color: #007bff; }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #ff3366;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .profile-card {
+            width: 250px;
+            margin: 15px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            overflow: hidden;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .profile-card:hover { transform: scale(1.05); }
+        .profile-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .profile-card h3 { margin: 10px 0; }
+        .profile-card p { font-size: 14px; color: #555; }
+        .like-btn {
+            display: inline-block;
+            margin: 10px;
+            padding: 8px 12px;
+            background: #ff3366;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .like-btn:hover { background: #cc2952; }
+    </style>
+</head>
+<body>
+    <!-- Navigation bar -->
+    <header>
+        <a href="{% url 'accounts:dashboard' %}">🏠 Home</a>
+        <a href="{% url 'accounts:explore' %}">🔍 Explore</a>
+        <a href="{% url 'interactions:matches_dashboard' %}">💬 Chat</a>
+        <a href="{% url 'interactions:likes_dashboard' %}">❤️ Likes</a>
+        <a href="{% url 'accounts:profile' %}">👤 Profile</a>
+    </header>
+
+    <h1>❤️ People Who Liked You</h1>
+
+    <div class="container">
+        {% for like in likes %}
+            <div class="profile-card">
+                {% if like.liker.profile_photo %}
+                    <img src="{{ like.liker.profile_photo.url }}" alt="{{ like.liker.full_name }}">
+                {% else %}
+                    <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
+                {% endif %}
+                <h3>{{ like.liker.full_name }}</h3>
+                <p>{{ like.liker.bio|default:"No bio yet." }}</p>
+                <p>Goal: {{ like.liker.relationship_goal|default:"Not specified" }}</p>
+                <!-- Like Back button -->
+                <a href="{% url 'interactions:like_back' like.liker.id %}" class="like-btn">👍 Like Back</a>
+            </div>
+        {% empty %}
+            <p style="text-align:center;">No one has liked you yet.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -1,135 +1,120 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Profile, UserPhoto
+from datetime import datetime
 from django.contrib.auth import get_user_model
-User = get_user_model()
 
+User = get_user_model()   # Safely get the active User model (works with custom user models)
+
+
+# ONBOARDING FLOW
 
 # Step 1: Collect user's name
 def onboarding_name(request):
     if request.method == 'POST':
         # Save name into session dictionary
-        request.session['onboarding'] = {
-            "name": request.POST.get("name")
-        }
-        # Redirect to next step (gender)
+        request.session['onboarding'] = {"name": request.POST.get("name")}
         return redirect("profiles:onboarding_gender")
-
-    # Render name input form with progress indicator
+    # Render template with progress bar at 20%
     return render(request, 'profiles/onboarding/name.html', {"progress": 20})
 
 
 # Step 2: Collect user's gender
 def onboarding_gender(request):
     if request.method == 'POST':
-        # Retrieve existing onboarding data from session
         data = request.session.get('onboarding', {})
-        # Add gender to session data
-        data['gender'] = request.POST.get('gender')
+        data['gender'] = request.POST.get('gender')   # "M" or "F"
         request.session['onboarding'] = data
-        # Redirect to next step (birthday)
         return redirect("profiles:onboarding_birthday")
-
-    # Render gender input form with progress indicator
     return render(request, 'profiles/onboarding/gender.html', {"progress": 40})
 
 
 # Step 3: Collect user's birthday
 def onboarding_birthday(request):
     if request.method == 'POST':
-        # Retrieve existing onboarding data
         data = request.session.get('onboarding', {})
-        # Add birthday to session data
-        data['birthday'] = request.POST.get('birthday')
+        data['birthday'] = request.POST.get('birthday')   # Expect format YYYY-MM-DD
         request.session['onboarding'] = data
-        # Redirect to next step (bio)
         return redirect("profiles:onboarding_bio")
-
-    # Render birthday input form with progress indicator
     return render(request, 'profiles/onboarding/birthday.html', {"progress": 60})
 
 
 # Step 4: Collect user's bio
 def onboarding_bio(request):
     if request.method == 'POST':
-        # Retrieve existing onboarding data
         data = request.session.get('onboarding', {})
-        # Add bio to session data
         data['bio'] = request.POST.get('bio')
         request.session['onboarding'] = data
-        # Redirect to next step (photo upload)
+        return redirect("profiles:onboarding_looking_for")
+    return render(request, 'profiles/onboarding/bio.html', {"progress": 70})
+
+
+# Step 5: Collect user's preference (looking for men/women/all)
+def onboarding_looking_for(request):
+    if request.method == 'POST':
+        data = request.session.get('onboarding', {})
+        data['looking_for'] = request.POST.get('looking_for')   # "M", "F", or "A"
+        request.session['onboarding'] = data
+        return redirect("profiles:onboarding_goal")
+    return render(request, 'profiles/onboarding/looking_for.html', {"progress": 80})
+
+
+# Step 6: Collect relationship goal
+def onboarding_goal(request):
+    if request.method == 'POST':
+        data = request.session.get('onboarding', {})
+        data['relationship_goal'] = request.POST.get('relationship_goal')   # e.g. "longterm"
+        request.session['onboarding'] = data
         return redirect("profiles:onboarding_photo")
-
-    # Render bio input form with progress indicator
-    return render(request, 'profiles/onboarding/bio.html', {"progress": 80})
+    return render(request, 'profiles/onboarding/goal.html', {"progress": 90})
 
 
-# Step 5: Collect user's photo
+# Step 7: Collect user's photo
+@login_required
 def onboarding_photo(request):
     if request.method == 'POST':
-        # Retrieve existing onboarding data from session
-        data = request.session.get('onboarding', {})
-
-        # Handle photo upload
         photo = request.FILES.get("photo")
         if photo:
-            # Save the actual file object into the User model directly
-            user = request.user
-            user.profile_photo = photo   # Django saves file into MEDIA_ROOT/profile_photos/
-            user.save()
-
-        # Save updated data back into session (for consistency with other steps)
-        request.session['onboarding'] = data
-
-        # Redirect to final step (finish)
+            # Ensure profile exists
+            profile, _ = Profile.objects.get_or_create(user=request.user)
+            # Save the uploaded photo right away
+            UserPhoto.objects.create(profile=profile, image=photo)
+        # Move on to the finish step
         return redirect("profiles:onboarding_finish")
-
-    # Render photo upload form with progress indicator
     return render(request, 'profiles/onboarding/photo.html', {"progress": 100})
 
-
+# Final step: Save everything into Profile + UserPhoto
+@login_required
 def onboarding_finish(request):
-    """
-    Final step of onboarding:
-    - Collect data from session
-    - Save into User model
-    - Handle birthday conversion
-    - Save uploaded photo properly
-    - Mark onboarding complete
-    """
-
-    # Retrieve collected onboarding data from session
     data = request.session.get("onboarding", {})
-    user = request.user  # Current logged-in user
+    user = request.user
 
-    # Save text fields into User model
-    user.full_name = data.get("name")
-    user.gender = data.get("gender")
-    user.bio = data.get("bio")
+    # Get or create profile for this user
+    profile, _ = Profile.objects.get_or_create(user=user)
 
-    # Convert birthday string into a proper date object
+    # Save collected fields
+    profile.full_name = data.get("name")
+    profile.gender = data.get("gender")
+    profile.bio = data.get("bio")
+    profile.looking_for = data.get("looking_for")
+    profile.relationship_goal = data.get("relationship_goal")
+
+    # Parse birthday safely
     birthday_str = data.get("birthday")
     if birthday_str:
-        from datetime import datetime
         try:
-            # Expecting format YYYY-MM-DD from <input type="date">
-            user.birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+            profile.birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
         except ValueError:
-            # Log invalid format for debugging instead of silently ignoring
-            print(f"Invalid birthday format received: {birthday_str}")
+            print(f"Invalid birthday format: {birthday_str}")
 
-    # Save uploaded photo (if provided)
-    photo = request.FILES.get("photo")
-    if photo:
-        user.profile_photo = photo  # Django saves file into MEDIA_ROOT/profile_photos/
-
-    # Mark onboarding as complete
-    user.onboarding_complete = True
-
-    # Save all changes in one go
-    user.save()
+    # Mark onboarding complete
+    profile.onboarding_complete = True
+    profile.save()
 
     # Clear session data
     request.session.pop("onboarding", None)
 
-    # Redirect to dashboard/home
     return redirect("accounts:dashboard")
+
+    
 

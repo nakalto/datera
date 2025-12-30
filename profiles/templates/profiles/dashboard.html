@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datera Dashboard</title>
+    {% load static %}
+
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #000;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, #111, #222);
+            padding: 16px 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #ff3366;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+            letter-spacing: 1px;
+            font-size: 20px;
+        }
+
+        /* Feed container */
+        .feed {
+            margin-top: 80px; /* push below header */
+            padding: 30px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px; /* space between cards */
+        }
+
+        /* Profile card (advanced width) */
+        .profile-card {
+            width: 95%;
+            max-width: 600px; /* ✅ advanced wider card */
+            height: 75vh;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+            background: #000;
+            position: relative;
+        }
+
+        /* Carousel images with frame */
+        .carousel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .carousel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            border: 6px solid #fff;        /* frame */
+            border-radius: 24px;
+            box-shadow: 0 0 20px rgba(255,51,102,0.6); /* subtle glow */
+        }
+        .carousel img.active {
+            opacity: 1;
+        }
+
+        /* Story-style progress indicators */
+        .carousel-indicators {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+            width: 85%;
+        }
+        .carousel-indicators span {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 2px;
+        }
+        .carousel-indicators span.active {
+            background: #ff3366;
+        }
+
+        /* Overlay info */
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 24px;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+        }
+        .overlay h3 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: bold;
+        }
+        .overlay p {
+            margin: 8px 0;
+            font-size: 15px;
+            color: #ddd;
+        }
+        .goals {
+            display: inline-block;
+            background: #ff3366;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        /* Action buttons */
+        .actions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            z-index: 10;
+        }
+        .btn-action {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        }
+        .btn-action:hover{
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+        .btn-like { background: #28a745; color: #fff; }
+        .btn-dislike { background: #dc3545; color: #fff; }
+        .btn-superlike { background: #007bff; color: #fff; }
+
+        /* Nav bar */
+        .nav-bar {
+            background: #111;
+            padding: 12px;
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.5);
+        }
+        .nav-bar a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 26px;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background 0.2s ease;
+        }
+        .nav-bar a:hover {
+            background: rgba(255,51,102,0.2);
+            color: #ff3366;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span>🔥 For you</span>
+    </div>
+
+    <div class="feed" id="feed">
+        {% for profile in profiles %}
+            {% if profile.user != request.user %}
+            <div class="profile-card">
+                <div class="carousel">
+                    {% for photo in profile.photos.all %}
+                        <img src="{{ photo.image.url }}" alt="{{ profile.user.username }}" class="{% if forloop.first %}active{% endif %}">
+                    {% endfor %}
+                    <div class="carousel-indicators">
+                        {% for photo in profile.photos.all %}
+                            <span class="{% if forloop.first %}active{% endif %}"></span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="overlay">
+                    <h3>{{ profile.full_name|default_if_none:profile.user.username }}, {{ profile.age }}</h3>
+                    <p>{{ profile.bio|default:"No bio yet." }}</p>
+                    {% if profile.relationship_goal %}
+                        <span class="goals">{{ profile.get_relationship_goal_display }}</span>
+                    {% else %}
+                        <span class="goals">Not specified</span>
+                    {% endif %}
+                </div>
+
+                <div class="actions">
+                    <button class="btn-action btn-dislike">❌</button>
+                    <button class="btn-action btn-like">❤️</button>
+                    <button class="btn-action btn-superlike">⭐</button>
+                </div>
+            </div>
+            {% endif %}
+        {% empty %}
+            <p>No other people yet. Invite friends to join!</p>
+        {% endfor %}
+    </div>
+
+    <div class="nav-bar">
+        <a href="{% url 'profiles:dashboard' %}">🏠</a>
+        <a href="{% url 'profiles:explore' %}">🔍</a>
+        <a href="{% url 'interactions:likes_dashboard' %}">❤️</a>
+        <a href="{% url 'interactions:matches_dashboard' %}">💬</a>
+        <a href="{% url 'profiles:profile' %}">👤</a>
+    </div>
+
+    <script>
+        // Auto-slide + indicators update
+        document.querySelectorAll('.carousel').forEach(carousel => {
+            let images = carousel.querySelectorAll('img');
+            let indicators = carousel.querySelectorAll('.carousel-indicators span');
+            let current = 0;
+
+            function showImage(index) {
+                images.forEach((img, i) => {
+                    img.classList.toggle('active', i === index);
+                    indicators[i].classList.toggle('active', i === index);
+                });
+            }
+
+            if (images.length > 1) {
+                setInterval(() => {
+                    current = (current + 1) % images.length;
+                    showImage(current);
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>

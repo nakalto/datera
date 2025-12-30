@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Explore Relationship Goals</title>
+    {% load static %}
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; }
+        header {
+            background: #fff; padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around;
+        }
+        header a {
+            text-decoration: none; color: #333;
+            font-weight: bold; padding: 10px;
+        }
+        header a:hover { color: #007bff; }
+        h1 { text-align: center; margin-top: 20px; color: #ff3366; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            max-width: 800px;
+            margin: auto;
+        }
+        .card {
+            background: #fff; border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 20px; text-align: center;
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: scale(1.05); }
+        .icon { font-size: 40px; margin-bottom: 10px; }
+        .count { font-size: 14px; color: #555; margin-top: 5px; }
+        .card a {
+            text-decoration: none; color: #333;
+            font-weight: bold;
+        }
+        .profiles {
+            max-width: 800px; margin: 30px auto; padding: 20px;
+        }
+        .profile-card {
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 15px; margin-bottom: 15px;
+            display: flex; align-items: center;
+        }
+        .profile-card img {
+            width: 60px; height: 60px; border-radius: 50%;
+            object-fit: cover; margin-right: 15px;
+        }
+        .profile-info { flex: 1; }
+        .profile-info h3 { margin: 0; color: #333; }
+        .profile-info p { margin: 5px 0; color: #666; font-size: 14px; }
+        .pagination { text-align:center; margin-top:20px; }
+        .pagination a { margin:0 10px; text-decoration:none; color:#007bff; }
+    </style>
+</head>
+<body>
+    <!-- Navigation bar -->
+    <header>
+        <a href="{% url 'profiles:dashboard' %}">🏠 Home</a>
+        <a href="{% url 'profiles:explore' %}">🔍 Explore</a>
+        <a href="{% url 'interactions:matches_dashboard' %}">💬 Chat</a>
+        <a href="{% url 'interactions:likes_dashboard' %}">❤️ Likes</a>
+        <a href="{% url 'profiles:profile' %}">👤 Profile</a>
+    </header>
+
+    {% if profiles %}
+        <!-- Show profiles for selected goal -->
+        <h1>🎯 People Looking For {{ goal|title }}</h1>
+        <p style="text-align:center;">
+            <a href="{% url 'profiles:explore' %}">⬅ Back to Explore Categories</a>
+        </p>
+        <div class="profiles">
+            {% for profile in profiles %}
+                <div class="profile-card">
+                    {% with first_photo=profile.photos.first %}
+                        {% if first_photo %}
+                            <img src="{{ first_photo.image.url }}" alt="{{ profile.full_name }}">
+                        {% else %}
+                            <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
+                        {% endif %}
+                    {% endwith %}
+                    <div class="profile-info">
+                        <h3>{{ profile.full_name }}</h3>
+                        <p>{{ profile.bio|truncatewords:15 }}</p>
+                        <p><strong>Goal:</strong> {{ profile.get_relationship_goal_display }}</p>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="text-align:center; color:#777;">No profiles found for this goal. Try another category!</p>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if profiles.has_other_pages %}
+        <div class="pagination">
+            {% if profiles.has_previous %}
+                <a href="?goal={{ goal }}&page={{ profiles.previous_page_number }}">⬅ Previous</a>
+            {% endif %}
+            <span>Page {{ profiles.number }} of {{ profiles.paginator.num_pages }}</span>
+            {% if profiles.has_next %}
+                <a href="?goal={{ goal }}&page={{ profiles.next_page_number }}">Next ➡</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Show category grid with counts -->
+        <h1>🎯 Goal-Driven Dating</h1>
+        <p style="text-align:center;">Find people with similar relationship goals</p>
+
+        <div class="grid">
+            <div class="card">
+                <div class="icon">🌹</div>
+                <a href="{% url 'profiles:explore' %}?goal=longterm">Long-term Partner</a>
+                <div class="count">{{ goals.longterm }} people</div>
+            </div>
+            <div class="card">
+                <div class="icon">🦢</div>
+                <a href="{% url 'profiles:explore' %}?goal=serious">Serious Daters</a>
+                <div class="count">{{ goals.serious }} people</div>
+            </div>
+            <div class="card">
+                <div class="icon">🌙</div>
+                <a href="{% url 'profiles:explore' %}?goal=freetonight">Free Tonight</a>
+                <div class="count">{{ goals.freetonight }} people</div>
+            </div>
+            <div class="card">
+                <div class="icon">🎉</div>
+                <a href="{% url 'profiles:explore' %}?goal=shortterm">Short-term Fun</a>
+                <div class="count">{{ goals.shortterm }} people</div>
+            </div>
+            <div class="card">
+                <div class="icon">🤝</div>
+                <a href="{% url 'profiles:explore' %}?goal=friendship">Friendship</a>
+                <div class="count">{{ goals.friendship }} people</div>
+            </div>
+            <div class="card">
+                <div class="icon">❓</div>
+                <a href="{% url 'profiles:explore' %}?goal=unsure">Not Sure Yet</a>
+                <div class="count">{{ goals.unsure }} people</div>
+            </div>
+        </div>
+    {% endif %}
+</body>
+</html>

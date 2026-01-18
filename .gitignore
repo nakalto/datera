@@ -35,3 +35,5 @@ Thumbs.db
 
 # Byte-compiled stuff
 *.pdb
+*.swp
+

@@ -5,42 +5,38 @@ from django.shortcuts import render, redirect, get_object_or_404
 # Import models
 from interactions.models import Match
 from .models import Message
-# Create your views here.
 
 @login_required
 def chat_view(request, match_id):
     """
-    display chat message for a given match and allow sending new ones 
-
+    Display chat messages for a given match and allow sending new ones.
     """
 
-    #Get the match object by ID (404 if not found)
+    # Get the match object by ID (404 if not found)
     match = get_object_or_404(Match, id=match_id)
     
-    #ensure login user is part of this match 
+    # Ensure logged-in user is part of this match
     if request.user not in [match.user1, match.user2]:
         return redirect("interactions:matches_dashboard")
     
-
-    #handle new message submission 
+    # Handle new message submission
     if request.method == "POST":
-        #Get the message content from the form 
         content = request.POST.get("content")
-        #if content is not empy, create new message record
         if content:
             Message.objects.create(match=match, sender=request.user, content=content)
-        #Ridirect back to the same chatview(prevents resubmission on refresh )    
+        # Redirect back to the same chat view (prevents resubmission on refresh)
         return redirect("chat:chat_view", match_id=match_id)
     
-    #Get all messages for this match, ordered by creation time
+    # Get all messages for this match, ordered by creation time
     messages = match.messages.order_by("created_at")
 
-    #compute the partner (the other user in the match)
-    partner = match.user2 if match.user1 == request.user else match.user1
+    # Compute the partner (the other user in the match)
+    partner_user = match.user2 if match.user1 == request.user else match.user1
+    partner_profile = partner_user.profile  # ✅ get the Profile object
 
-    #Render the chart template with match, partner and messages 
+    # Render the chat template with match, partner profile, and messages
     return render(request, "chat/chat.html", {
-        "match":match,
-        "partner": partner,
-        "messages":messages,
+        "match": match,
+        "partner": partner_profile,
+        "messages": messages,
     })

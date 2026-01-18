@@ -120,7 +120,7 @@
         {% if partner.profile_photo %}
             <img src="{{ partner.profile_photo.url }}" alt="{{ partner.full_name }}">
         {% else %}
-            <img src="{% static 'accounts/img/default-avatar.png' %}" alt="Default avatar">
+            <img src="{% static 'profiles/img/default-avatar.png' %}" alt="Default avatar">
         {% endif %}
         💬 Chat with {{ partner.full_name }}
     </header>
@@ -146,11 +146,11 @@
 
     <!-- Bottom nav bar -->
     <nav>
-        <a href="{% url 'accounts:dashboard' %}">🏠</a>
-        <a href="{% url 'accounts:explore' %}">🔍</a>
+        <a href="{% url 'profiles:dashboard' %}">🏠</a>
+        <a href="{% url 'profiles:explore' %}">🔍</a>
         <a href="{% url 'interactions:likes_dashboard' %}">❤️</a>
         <a href="{% url 'interactions:matches_dashboard' %}" class="active">💬</a>
-        <a href="{% url 'accounts:profile' %}">👤</a>
+        <a href="{% url 'profiles:profile' %}">👤</a>
     </nav>
 </body>
 </html>

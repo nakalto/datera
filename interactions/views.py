@@ -1,128 +1,131 @@
+# Import Django shortcuts for rendering templates, redirecting, and safely fetching objects
 from django.shortcuts import render, redirect, get_object_or_404
+
+# Import the active User model from accounts app
 from accounts.models import User
-from .models import Swipe, Match, Like
+
+# Import our interaction models (Swipe and Match)
+from .models import Swipe, Match
+
+# Import decorator to ensure only logged-in users can access these views
 from django.contrib.auth.decorators import login_required
 
 
+# Handle a "like" action
+@login_required
 def like_user(request, user_id):
     """
     Handle a 'like' action:
-    -Get the target user
-    -create or update a swipe user 
-    -check for mutual like
-    -if mutual, create a match and redirect to matches dashboard
-    -if one-sided, redirect to accounts dashboard
+    - Get the target user
+    - Create or update a Swipe record
+    - Check for mutual like
+    - If mutual, create a Match and redirect to matches dashboard
+    - If one-sided, redirect back to dashboard
     """
-    # Get the user being liked
+
+    # Get the user being liked (404 if not found)
     to_user = get_object_or_404(User, id=user_id)
 
-    
-    # Try to get or create a Swipe record between current user and target
-    swipe, created = Swipe.objects.get_or_create(
+    # Create or update a Swipe record (ensures no duplicates)
+    swipe, created = Swipe.objects.update_or_create(
         from_user=request.user,      # current logged-in user
         to_user=to_user,             # target user being liked
-        defaults={"is_like": True}   # if new, set is_like = True
+        defaults={"is_like": True}   # set is_like = True
     )
 
-    #if the swipe already existed, update it to be a 'like'
-    if not created:
-        swipe.is_like = True
-        swipe.save()
-
-    #check if the target user arleady liked by the current user 
+    # Check if the target user already liked the current user
     if Swipe.objects.filter(from_user=to_user, to_user=request.user, is_like=True).exists():
-        #Normalize ordering(smaller ID first) to prevent duplicate matches
-        user1,user2 = sorted([request.user, to_user], key=lambda u:u.id) 
-        #create the match if it doesn't arleady exist 
+        # Normalize ordering (smaller ID first) to prevent duplicate matches
+        user1, user2 = sorted([request.user, to_user], key=lambda u: u.id)
+        # Create the match if it doesn't already exist
         Match.objects.get_or_create(user1=user1, user2=user2)
-        #Redirect to matches dashboard if mutual like
+        # Redirect to matches dashboard if mutual like
         return redirect("interactions:matches_dashboard")
-    
-    #if only one-sided like, redirect back to accounts dashboard 
-    return redirect("accounts:dashboard")
-            
+
+    # If only one-sided like, redirect back to dashboard
+    return redirect("profiles:dashboard")
 
 
+# Handle a "dislike" action
+@login_required
 def dislike_user(request, user_id):
     """
     Handle a 'dislike' action:
-    - Create a Swipe record (user dislikes another user)
+    - Create or update a Swipe record (user dislikes another user)
     - No matching logic needed
     - Redirect to dashboard
     """
 
-    # Get the user being disliked
+    # Get the user being disliked (404 if not found)
     to_user = get_object_or_404(User, id=user_id)
 
-    # Save the dislike action
-    Swipe.objects.create(from_user=request.user, to_user=to_user, is_like=False)
+    # Save the dislike action (update if already exists)
+    Swipe.objects.update_or_create(
+        from_user=request.user,      # current logged-in user
+        to_user=to_user,             # target user being disliked
+        defaults={"is_like": False}  # set is_like = False
+    )
 
     # Go back to the dashboard after disliking
-    return redirect("accounts:dashboard")
+    return redirect("profiles:dashboard")
 
 
+
+# Show all matches for the logged-in user
 @login_required
 def matches_dashboard(request):
     """
-    show all matches for the logged-in user.
-    compute the partner(the other user) for each match.
-    pass a list of dicts with partner info to the template.
+    Show all matches for the logged-in user:
+    - Collect matches where user is either user1 or user2
+    - Order matches by newest first
+    - Build a list of dicts with partner info
+    - Render the template with matches context
     """
-    #collect all matches for the logged-in user is either user1 or user2 
-    matches = Match.objects.filter(user1=request.user)|Match.objects.filter(user2=request.user)
 
-    #Order matches by newest first 
+    # Collect all matches where the logged-in user is either user1 or user2
+    matches = Match.objects.filter(user1=request.user) | Match.objects.filter(user2=request.user)
+
+    # Order matches by newest first
     matches = matches.order_by("-created_at")
 
-
-    #build a list of dicts with partner info
+    # Build a list of dicts with partner info
     match_list = []
     for m in matches:
-        partner = m.user2 if m.user1 == request.user else m.user1
-        match_list.append({"match": m, "partner": partner})
+        # Determine the partner (the other user in the match)
+        partner_user = m.user2 if m.user1 == request.user else m.user1
+        partner_profile = partner_user.profile #get profile object 
+        # Append match and partner info to list
+        match_list.append({"match": m, "partner": partner_profile})
 
-    #Render the template with matches context 
+    # Render the template with matches context
     return render(request, "interactions/matches_dashboard.html", {"match_list": match_list})
 
 
 @login_required
 def likes_dashboard(request):
     """
-    Show people who liked the logged-in user, but whom the user hasn't liked back yet.
+    show people who liked the logged-in user, but whom the user hasn't liked back yet. 
     """
+    #step 1: Get all swipes where someone liked me 
+    incoming_likes = Swipe.objects.filter(
+        to_user=request.user,     #I am the target user    
+        is_like=True,            #only likes not dislikes
+    ).select_related("from_user") #optimize the query by fetching liker info
 
-    # Query all Like objects where the current user is the target (i.e. people liked me)
-    incoming_likes = Like.objects.filter(liked=request.user).select_related("liker")
 
-    # Build a list of likes where I have NOT liked them back yet
+
+    #step 2: Filter out the cases that arleady liked them back 
     not_liked_back = [
-        like for like in incoming_likes
-        if not Like.objects.filter(liker=request.user, liked=like.liker).exists()
+        swipe for swipe in incoming_likes
+
+        if not Swipe.objects.filter(
+            from_user= request.user,   # me liking them 
+            to_user=swipe.from_user,   # the person who likes me 
+            is_like=True               #must be a like
+        ).exists()
     ]
 
-    # Render the likes_dashboard template with the filtered list
-    return render(request, "interactions/likes_dashboard.html", {
-        "likes": not_liked_back
-    })
+    #step3: Render template with the filtered list 
+    return render(request, "interactions/likes_dashboard.html", {"likes": not_liked_back})
 
 
-@login_required
-def like_back(request, user_id):
-    """
-    Allow the logged-in user to like back someone who liked them.
-    If mutual, create a Match and redirect to matches dashboard.
-    """
-
-    # Get the target user by ID (404 if not found)
-    target = get_object_or_404(User, id=user_id)
-
-    # Create a Like if it doesn't already exist
-    Like.objects.get_or_create(liker=request.user, liked=target)
-
-    # Check if target had already liked me (mutual like)
-    if Like.objects.filter(liker=target, liked=request.user).exists():
-        # If mutual, create a Match (only once)
-        Match.objects.get_or_create(user1=request.user, user2=target)
-
-    # Redirect to matches dashboard after liking back
-    return redirect("interactions:matches_dashboard")

@@ -68,11 +68,11 @@
 <body>
     <!-- Navigation bar -->
     <header>
-        <a href="{% url 'accounts:dashboard' %}">🏠 Home</a>
-        <a href="{% url 'accounts:explore' %}">🔍 Explore</a>
+        <a href="{% url 'profiles:dashboard' %}">🏠 Home</a>
+        <a href="{% url 'profiles:explore' %}">🔍 Explore</a>
         <a href="{% url 'interactions:matches_dashboard' %}">💬 Chat</a>
         <a href="{% url 'interactions:likes_dashboard' %}">❤️ Likes</a>
-        <a href="{% url 'accounts:profile' %}">👤 Profile</a>
+        <a href="{% url 'profiles:profile' %}">👤 Profile</a>
     </header>
 
     <h1>❤️ People Who Liked You</h1>
@@ -89,7 +89,7 @@
                 <p>{{ like.liker.bio|default:"No bio yet." }}</p>
                 <p>Goal: {{ like.liker.relationship_goal|default:"Not specified" }}</p>
                 <!-- Like Back button -->
-                <a href="{% url 'interactions:like_back' like.liker.id %}" class="like-btn">👍 Like Back</a>
+                <a href="{% url 'interactions:like_user' swipe.from_user.id%}" class="like-btn">Like Back ❤️</a>
             </div>
         {% empty %}
             <p style="text-align:center;">No one has liked you yet.</p>

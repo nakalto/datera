@@ -143,6 +143,10 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
         }
         .btn-action:hover{
             transform: scale(1.1);
@@ -208,10 +212,16 @@
                 </div>
 
                 <div class="actions">
-                    <button class="btn-action btn-dislike">❌</button>
-                    <button class="btn-action btn-like">❤️</button>
-                    <button class="btn-action btn-superlike">⭐</button>
+                     <!-- Dislike button: calls dislike_user view -->
+                     <a href="{% url 'interactions:dislike_user' profile.user.id %}" class="btn-action btn-dislike">❌</a>
+
+                      <!-- Like button: calls like_user view -->
+                      <a href="{% url 'interactions:like_user' profile.user.id %}" class="btn-action btn-like">❤️</a>
+
+                     <!-- Superlike button (optional, can extend later) -->
+                     <a href="{% url 'interactions:like_user' profile.user.id %}?superlike=true" class="btn-action btn-superlike">⭐</a>
                 </div>
+
             </div>
             {% endif %}
         {% empty %}

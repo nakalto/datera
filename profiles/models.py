@@ -14,7 +14,7 @@ class Profile(models.Model):
         ("F", "Female"),
     ]
     gender = models.CharField(
-        max_length=1,                # only store "M" or "F"
+        max_length=1,                # store "M" or "F"
         choices=GENDER_CHOICES,
         blank=True,
         null=True
@@ -31,17 +31,16 @@ class Profile(models.Model):
 
     # Relationship goals (Tinder-style categories)
     RELATIONSHIP_GOALS = [
-        ("longterm", "Long-term partner"),   # 🌹
-        ("serious", "Serious daters"),       # 🦢
-        ("freetonight", "Free tonight"),     # 🌙
-        ("shortterm", "Short-term fun"),     # 🎉
-        ("friendship", "Friendship"),        # 🤝
-        ("unsure", "Not sure yet"),          # ❓
+        ("LT", "Long-term partner"),   # 🌹
+        ("SR", "Serious daters"),      # 🦢
+        ("FT", "Free tonight"),        # 🌙
+        ("ST", "Short-term fun"),      # 🎉
+        ("FR", "Friendship"),          # 🤝
+        ("UN", "Not sure yet"),        # ❓
     ]
     relationship_goal = models.CharField(
-        max_length=20,
+        max_length=2,                  # store compact codes like "LT", "ST"
         choices=RELATIONSHIP_GOALS,
-        blank=True,
         null=True,
         help_text="User's dating or social intention (Explore categories)"
     )
@@ -53,7 +52,7 @@ class Profile(models.Model):
         ("A", "All"),
     ]
     looking_for = models.CharField(
-        max_length=10,                # only store "M", "F", or "A"
+        max_length=1,                  # store "M", "F", or "A"
         choices=LOOKING_FOR_CHOICES,
         default="A",
         help_text="Who the user wants to see in dashboard"
@@ -62,6 +61,16 @@ class Profile(models.Model):
     def __str__(self):
         # Show full name if available, otherwise username
         return f"{self.full_name or self.user.username}'s Profile"
+    
+    @property
+    def profile_photo(self):
+        """
+        Return the main photos if it set, otherwise the newest photo.
+        Thanks the meta ordering in UserPhoto, first() will give the 
+        main photo first, then the newest
+        """
+        photo = self.photos.first()
+        return photo.image if photo else None 
 
 
 class UserPhoto(models.Model):
@@ -74,6 +83,15 @@ class UserPhoto(models.Model):
     # Timestamp when photo was uploaded
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    #we mark one photo as the main profile photo 
+    is_main = models.BooleanField(default=False)
+
     def __str__(self):
         # Display username and photo ID for clarity
         return f"{self.profile.user.username} - Photo {self.id}"
+
+
+    class Meta:
+        ordering = ["-is_main", "-uploaded_at"] #main photo first, the  newest 
+
+

@@ -27,4 +27,12 @@ urlpatterns = [
 
     # Final Step: Finish onboarding
     path("onboarding/finish/", views.onboarding_finish, name="onboarding_finish"),
+
+    path("dashboard/", views.dashboard, name="dashboard"),
+
+    path("explore/", views.explore, name="explore"),
+
+    path("profile/", views.profile, name="profile"),
+
+    path("profile/<int:user_id>/", views.profile_view, name="profile_view"), 
 ]

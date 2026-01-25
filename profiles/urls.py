@@ -35,4 +35,18 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
 
     path("profile/<int:user_id>/", views.profile_view, name="profile_view"), 
+
+
+
+    # Goal-specific dashboards
+    path("dashboard/long-term/", views.long_term_dashboard, name="long_term_dashboard"),
+    path("dashboard/serious-daters/", views.serious_daters_dashboard, name="serious_daters_dashboard"),
+    path("dashboard/free-tonight/", views.free_tonight_dashboard, name="free_tonight_dashboard"),
+    path("dashboard/short-term/", views.short_term_dashboard, name="short_term_dashboard"),
+    path("dashboard/friendship/", views.friendship_dashboard, name="friendship_dashboard"),
+    path("dashboard/unsure/", views.unsure_dashboard, name="unsure_dashboard"),
+
+    
 ]
+
+

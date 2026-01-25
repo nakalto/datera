@@ -177,6 +177,10 @@ def dashboard(request):
     )
 
 
+# --------------------------------------------
+# Import Django shortcuts and pagination tools
+# --------------------------------------------
+
 @login_required
 def explore(request):
     """
@@ -186,13 +190,14 @@ def explore(request):
     - Supports pagination for profile lists
     """
 
-    goal = request.GET.get("goal")   # Read ?goal= parameter from URL
-    page_number = request.GET.get("page", 1)   # Read ?page= parameter (default = 1)
+    # Read ?goal= parameter from URL (e.g. ?goal=LT)
+    goal = request.GET.get("goal")
+    page_number = request.GET.get("page", 1)
 
     if goal:
         # Show profiles for selected goal
         profiles_qs = Profile.objects.filter(
-            relationship_goal=goal,
+            relationship_goal=goal,          # must match one of: LT, SR, FT, ST, FR, UN
             onboarding_complete=True
         ).select_related("user").prefetch_related("photos")
 
@@ -209,14 +214,14 @@ def explore(request):
             }
         )
     else:
-        # Show counts for all goals
+        # Show counts for all goals (using codes)
         goals = {
-            "longterm": Profile.objects.filter(relationship_goal="longterm", onboarding_complete=True).count(),
-            "serious": Profile.objects.filter(relationship_goal="serious", onboarding_complete=True).count(),
-            "freetonight": Profile.objects.filter(relationship_goal="freetonight", onboarding_complete=True).count(),
-            "shortterm": Profile.objects.filter(relationship_goal="shortterm", onboarding_complete=True).count(),
-            "friendship": Profile.objects.filter(relationship_goal="friendship", onboarding_complete=True).count(),
-            "unsure": Profile.objects.filter(relationship_goal="unsure", onboarding_complete=True).count(),
+            "LT": Profile.objects.filter(relationship_goal="LT", onboarding_complete=True).count(),
+            "SR": Profile.objects.filter(relationship_goal="SR", onboarding_complete=True).count(),
+            "FT": Profile.objects.filter(relationship_goal="FT", onboarding_complete=True).count(),
+            "ST": Profile.objects.filter(relationship_goal="ST", onboarding_complete=True).count(),
+            "FR": Profile.objects.filter(relationship_goal="FR", onboarding_complete=True).count(),
+            "UN": Profile.objects.filter(relationship_goal="UN", onboarding_complete=True).count(),
         }
 
         return render(request, "profiles/explore.html", {"goals": goals})
@@ -240,3 +245,103 @@ def profile_view(request, user_id):
     partner = get_object_or_404(User, id=user_id)
     return render(request, "profiles/profile_view.html", {"partner": partner})
 
+
+
+# Long-term Partner Dashboard
+@login_required  # Require user to be logged in
+def long_term_dashboard(request):
+    # Query all profiles with relationship_goal = "LT" and onboarding complete
+    profiles_qs = Profile.objects.filter(
+        relationship_goal="LT", onboarding_complete=True
+    ).select_related("user").prefetch_related("photos")  # Optimize queries
+
+    # Paginate results, 10 profiles per page
+    paginator = Paginator(profiles_qs, 10)
+    profiles = paginator.get_page(request.GET.get("page", 1))  # Get current page
+
+    # Render template with paginated profiles
+    return render(request, "profiles/long_term_dashboard.html", {"profiles": profiles})
+
+
+# Serious Daters Dashboard
+@login_required
+def serious_daters_dashboard(request):
+    # Query profiles with relationship_goal = "SR"
+    profiles_qs = Profile.objects.filter(
+        relationship_goal="SR", onboarding_complete=True
+    ).select_related("user").prefetch_related("photos")
+
+    # Paginate results
+    paginator = Paginator(profiles_qs, 10)
+    profiles = paginator.get_page(request.GET.get("page", 1))
+
+    # Render template
+    return render(request, "profiles/serious_daters_dashboard.html", {"profiles": profiles})
+
+
+
+# Free Tonight Dashboard
+@login_required
+def free_tonight_dashboard(request):
+    # Query profiles with relationship_goal = "FT"
+    profiles_qs = Profile.objects.filter(
+        relationship_goal="FT", onboarding_complete=True
+    ).select_related("user").prefetch_related("photos")
+
+    # Paginate results
+    paginator = Paginator(profiles_qs, 10)
+    profiles = paginator.get_page(request.GET.get("page", 1))
+
+    # Render template
+    return render(request, "profiles/free_tonight_dashboard.html", {"profiles": profiles})
+
+
+
+# Short-term Fun Dashboard
+@login_required
+def short_term_dashboard(request):
+    # Query profiles with relationship_goal = "ST"
+    profiles_qs = Profile.objects.filter(
+        relationship_goal="ST", onboarding_complete=True
+    ).select_related("user").prefetch_related("photos")
+
+    # Paginate results
+    paginator = Paginator(profiles_qs, 10)
+    profiles = paginator.get_page(request.GET.get("page", 1))
+
+    # Render template
+    return render(request, "profiles/short_term_dashboard.html", {"profiles": profiles})
+
+
+
+# Friendship Dashboard
+@login_required
+def friendship_dashboard(request):
+    # Query profiles with relationship_goal = "FR"
+    profiles_qs = Profile.objects.filter(
+        relationship_goal="FR", onboarding_complete=True
+    ).select_related("user").prefetch_related("photos")
+
+    # Paginate results
+    paginator = Paginator(profiles_qs, 10)
+    profiles = paginator.get_page(request.GET.get("page", 1))
+
+    # Render template
+    return render(request, "profiles/friendship_dashboard.html", {"profiles": profiles})
+
+
+
+# Not Sure Yet Dashboard
+@login_required
+def unsure_dashboard(request):
+    # Query profiles with relationship_goal = "UN"
+    profiles_qs = Profile.objects.filter(
+        relationship_goal="UN", onboarding_complete=True
+    ).select_related("user").prefetch_related("photos")
+
+    # Paginate results
+    paginator = Paginator(profiles_qs, 10)
+    profiles = paginator.get_page(request.GET.get("page", 1))
+
+    # Render template
+    return render(request, "profiles/unsure_dashboard.html", {"profiles": profiles})
